@@ -1,0 +1,4 @@
+#!/bin/sh
+# $FreeBSD$
+
+/usr/sbin/pc-sysinstall -c /etc/pc-sysinstall.cfg
