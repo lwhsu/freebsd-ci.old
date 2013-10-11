@@ -14,7 +14,7 @@
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <scm class="hudson.scm.SubversionSCM" plugin="subversion@1.50">
+  <scm class="hudson.scm.SubversionSCM" plugin="subversion@1.51">
     <locations>
       <hudson.scm.SubversionSCM_-ModuleLocation>
         <remote>svn://svn.freebsd.org/base/head</remote>
@@ -72,6 +72,8 @@ fi
 
 su - root -c &quot;cd /usr/src &amp;&amp; make -j ${JOBS} -DNO_CLEAN buildworld&quot;
 su - root -c &quot;cd /usr/src &amp;&amp; make -j ${JOBS} -DNO_CLEAN buildkernel&quot;
+
+su - root -c &quot;cd /usr/src &amp;&amp; mergemaster -pa&quot;
 
 su - root -c &quot;cd /usr/src/release &amp;&amp; env MAKEOBJDIRPREFIX=/usr/obj make clean&quot;
 su - root -c &quot;cd /usr/src/release &amp;&amp; env MAKEOBJDIRPREFIX=/usr/obj make -DNOPORTS -DNOSRC -DNODOC disc1.iso&quot;</command>
