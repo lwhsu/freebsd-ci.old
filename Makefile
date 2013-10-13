@@ -1,4 +1,4 @@
-# $FreeBSD: head/release/Makefile 253542 2013-07-22 12:07:57Z gjb $
+# $FreeBSD: head/release/Makefile 256430 2013-10-13 15:49:50Z gjb $
 #
 # Makefile for building releases and release media.
 # 
@@ -122,7 +122,8 @@ system: packagesystem
 # Install system
 	mkdir -p release
 	cd ${WORLDDIR} && ${IMAKE} installkernel installworld distribution \
-	    DESTDIR=${.OBJDIR}/release WITHOUT_RESCUE=1 WITHOUT_KERNEL_SYMBOLS=1
+		DESTDIR=${.OBJDIR}/release WITHOUT_RESCUE=1 WITHOUT_KERNEL_SYMBOLS=1 \
+		WITHOUT_PROFILE=1
 # Copy distfiles
 	mkdir -p release/usr/freebsd-dist
 	cp *.txz MANIFEST release/usr/freebsd-dist
@@ -143,8 +144,7 @@ bootonly: packagesystem
 	mkdir -p bootonly
 	cd ${WORLDDIR} && ${IMAKE} installkernel installworld distribution \
 	    DESTDIR=${.OBJDIR}/bootonly WITHOUT_AMD=1 WITHOUT_AT=1 \
-	    WITHOUT_BIND_DNSSEC=1 WITHOUT_BIND_ETC=1 WITHOUT_BIND_MTREE=1 \
-	    WITHOUT_BIND_NAMED=1 WITHOUT_GAMES=1 WITHOUT_GROFF=1 \
+	    WITHOUT_GAMES=1 WITHOUT_GROFF=1 \
 	    WITHOUT_INSTALLLIB=1 WITHOUT_LIB32=1 WITHOUT_MAIL=1 \
 	    WITHOUT_NCP=1 WITHOUT_TOOLCHAIN=1 WITHOUT_PROFILE=1 \
 	    WITHOUT_INSTALLIB=1 WITHOUT_RESCUE=1 WITHOUT_DICT=1 \
