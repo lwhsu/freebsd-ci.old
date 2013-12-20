@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.BooleanParameterDefinition>
+          <name>CLEAN_OBJ</name>
+          <description>clean /usr/obj</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@1.5.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <name></name>
+        <refspec>+refs/*/master:refs/remotes/*/master</refspec>
+        <url>https://github.com/freebsd/freebsd.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <disableSubmodules>false</disableSubmodules>
+    <recursiveSubmodules>false</recursiveSubmodules>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <authorOrCommitter>false</authorOrCommitter>
+    <clean>false</clean>
+    <wipeOutWorkspace>false</wipeOutWorkspace>
+    <pruneBranches>false</pruneBranches>
+    <remotePoll>false</remotePoll>
+    <ignoreNotifyCommit>false</ignoreNotifyCommit>
+    <useShallowClone>false</useShallowClone>
+    <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
+    <gitTool>Default</gitTool>
+    <submoduleCfg class="list"/>
+    <relativeTargetDir>src</relativeTargetDir>
+    <reference></reference>
+    <excludedRegions></excludedRegions>
+    <excludedUsers></excludedUsers>
+    <gitConfigName></gitConfigName>
+    <gitConfigEmail></gitConfigEmail>
+    <skipTag>false</skipTag>
+    <includedRegions></includedRegions>
+    <scmName></scmName>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <hudson.triggers.SCMTrigger>
+      <spec>H 4 * * *</spec>
+      <ignorePostCommitHooks>false</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>cd ${WORKSPACE}/src/release
+fetch https://raw.github.com/lwhsu/freebsd-ci/master/Makefile
+fetch https://raw.github.com/lwhsu/freebsd-ci/master/pc-sysinstall.cfg
+fetch https://raw.github.com/lwhsu/freebsd-ci/master/rc.local
+
+mkdir -p ${WORKSPACE}/obj</command>
+    </hudson.tasks.Shell>
+    <org.jvnet.hudson.plugins.SSHBuilder plugin="ssh@2.3">
+      <siteName>jenkins@192.168.56.101:22</siteName>
+      <command>hostname
+
+su - root -c &quot;mount 192.168.56.1:${WORKSPACE}/src /usr/src&quot;
+su - root -c &quot;mount 192.168.56.1:${WORKSPACE}/obj /usr/obj&quot;
+mount</command>
+    </org.jvnet.hudson.plugins.SSHBuilder>
+    <org.jvnet.hudson.plugins.SSHBuilder plugin="ssh@2.3">
+      <siteName>jenkins@192.168.56.101:22</siteName>
+      <command>hostname
+
+export JOBS=`sysctl -n kern.smp.cpus`
+
+if ${CLEAN_OBJ}; then
+        su - root -c &quot;rm -fr /usr/obj/*&quot;
+fi
+
+su - root -c &quot;cd /usr/src &amp;&amp; make -j ${JOBS} -DNO_CLEAN buildworld&quot;
+su - root -c &quot;cd /usr/src &amp;&amp; make -j ${JOBS} -DNO_CLEAN buildkernel&quot;
+
+su - root -c &quot;cd /usr/src/release &amp;&amp; env MAKEOBJDIRPREFIX=/usr/obj make clean&quot;
+su - root -c &quot;cd /usr/src/release &amp;&amp; env MAKEOBJDIRPREFIX=/usr/obj make -DNOPKG -DNOPORTS -DNOSRC -DNODOC disc1.iso&quot;</command>
+    </org.jvnet.hudson.plugins.SSHBuilder>
+    <org.jvnet.hudson.plugins.SSHBuilder plugin="ssh@2.3">
+      <siteName>jenkins@192.168.56.101:22</siteName>
+      <command>su - root -c &quot;umount /usr/src&quot;
+su - root -c &quot;umount /usr/obj&quot;
+mount</command>
+    </org.jvnet.hudson.plugins.SSHBuilder>
+  </builders>
+  <publishers>
+    <hudson.tasks.ArtifactArchiver>
+      <artifacts>src/release/disc1.iso</artifacts>
+      <latestOnly>true</latestOnly>
+      <allowEmptyArchive>false</allowEmptyArchive>
+    </hudson.tasks.ArtifactArchiver>
+  </publishers>
+  <buildWrappers/>
+</project>
