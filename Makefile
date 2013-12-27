@@ -1,4 +1,4 @@
-# $FreeBSD: head/release/Makefile 259426 2013-12-15 20:38:07Z gjb $
+# $FreeBSD: head/release/Makefile 259729 2013-12-22 16:12:47Z gjb $
 #
 # Makefile for building releases and release media.
 # 
@@ -104,6 +104,8 @@ base.txz:
 # Set up mergemaster root database
 	sh ${.CURDIR}/scripts/mm-mtree.sh -m ${WORLDDIR} -F \
 	    "TARGET_ARCH=${TARGET_ARCH} TARGET=${TARGET}" -D "${.OBJDIR}/${DISTDIR}/base"
+	etcupdate extract -B -M "TARGET_ARCH=${TARGET_ARCH} TARGET=${TARGET}" \
+	    -d "${.OBJDIR}/${DISTDIR}/base/var/db/etcupdate"
 # Package all components
 	cd ${WORLDDIR} && ${IMAKE} packageworld DISTDIR=${.OBJDIR}/${DISTDIR}
 	mv ${DISTDIR}/*.txz .
