@@ -13,13 +13,14 @@
         </hudson.model.BooleanParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.disk__usage.DiskUsageProperty plugin="disk-usage@0.23"/>
   </properties>
-  <scm class="hudson.scm.SubversionSCM" plugin="subversion@1.51">
+  <scm class="hudson.scm.SubversionSCM" plugin="subversion@2.2">
     <locations>
       <hudson.scm.SubversionSCM_-ModuleLocation>
         <remote>svn://svn.freebsd.org/base/head</remote>
-        <local>src</local>
-        <depthOption>infinity</depthOption>
+        <credentialsId></credentialsId>
+        <depthOption>empty</depthOption>
         <ignoreExternalsOption>false</ignoreExternalsOption>
       </hudson.scm.SubversionSCM_-ModuleLocation>
     </locations>
@@ -45,23 +46,32 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>cd ${WORKSPACE}/src/release
-fetch https://raw.github.com/lwhsu/freebsd-ci/master/Makefile
-fetch https://raw.github.com/lwhsu/freebsd-ci/master/pc-sysinstall.cfg
-fetch https://raw.github.com/lwhsu/freebsd-ci/master/rc.local
-
+      <command>#mkdir -p ${WORKSPACE}/src
 mkdir -p ${WORKSPACE}/obj</command>
     </hudson.tasks.Shell>
-    <org.jvnet.hudson.plugins.SSHBuilder plugin="ssh@2.3">
-      <siteName>jenkins@192.168.56.101:22</siteName>
+    <org.jvnet.hudson.plugins.SSHBuilder plugin="ssh@2.4">
+      <siteName>jenkins@192.168.56.102:22</siteName>
       <command>hostname
 
-su - root -c &quot;mount 192.168.56.1:${WORKSPACE}/src /usr/src&quot;
+#su - root -c &quot;mount 192.168.56.1:${WORKSPACE}/src /usr/src&quot;
 su - root -c &quot;mount 192.168.56.1:${WORKSPACE}/obj /usr/obj&quot;
-mount</command>
+mount
+
+if [ -d /usr/src ]; then
+    su - root -c &quot;svnlite co ${SVN_URL} -r ${SVN_REVISION} /usr/src&quot;
+else
+    su - root -c &quot;cd /usr/src &amp;&amp; svnlite up -r ${SVN_REVISION}&quot;
+fi</command>
     </org.jvnet.hudson.plugins.SSHBuilder>
-    <org.jvnet.hudson.plugins.SSHBuilder plugin="ssh@2.3">
-      <siteName>jenkins@192.168.56.101:22</siteName>
+    <org.jvnet.hudson.plugins.SSHBuilder plugin="ssh@2.4">
+      <siteName>jenkins@192.168.56.102:22</siteName>
+      <command>su - root -c &quot;cd /usr/src/release &amp;&amp; fetch https://raw.github.com/lwhsu/freebsd-ci/master/Makefile&quot;
+su - root -c &quot;cd /usr/src/release &amp;&amp; fetch https://raw.github.com/lwhsu/freebsd-ci/master/pc-sysinstall.cfg&quot;
+su - root -c &quot;cd /usr/src/release &amp;&amp; fetch https://raw.github.com/lwhsu/freebsd-ci/master/rc.local&quot;
+</command>
+    </org.jvnet.hudson.plugins.SSHBuilder>
+    <org.jvnet.hudson.plugins.SSHBuilder plugin="ssh@2.4">
+      <siteName>jenkins@192.168.56.102:22</siteName>
       <command>hostname
 
 export JOBS=`sysctl -n kern.smp.cpus`
@@ -76,18 +86,20 @@ su - root -c &quot;cd /usr/src &amp;&amp; make -j ${JOBS} -DNO_CLEAN buildkernel
 su - root -c &quot;cd /usr/src &amp;&amp; mergemaster -pa&quot;
 
 su - root -c &quot;cd /usr/src/release &amp;&amp; env MAKEOBJDIRPREFIX=/usr/obj make clean&quot;
-su - root -c &quot;cd /usr/src/release &amp;&amp; env MAKEOBJDIRPREFIX=/usr/obj make -DNOPORTS -DNOSRC -DNODOC disc1.iso&quot;</command>
+su - root -c &quot;cd /usr/src/release &amp;&amp; env MAKEOBJDIRPREFIX=/usr/obj make -DNOPORTS -DNOSRC -DNODOC disc1.iso&quot;
+
+su - root -c &quot;mv /usr/src/release/disc1.iso /usr/obj&quot;</command>
     </org.jvnet.hudson.plugins.SSHBuilder>
-    <org.jvnet.hudson.plugins.SSHBuilder plugin="ssh@2.3">
-      <siteName>jenkins@192.168.56.101:22</siteName>
-      <command>su - root -c &quot;umount /usr/src&quot;
+    <org.jvnet.hudson.plugins.SSHBuilder plugin="ssh@2.4">
+      <siteName>jenkins@192.168.56.102:22</siteName>
+      <command>#su - root -c &quot;umount /usr/src&quot;
 su - root -c &quot;umount /usr/obj&quot;
 mount</command>
     </org.jvnet.hudson.plugins.SSHBuilder>
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
-      <artifacts>src/release/disc1.iso</artifacts>
+      <artifacts>obj/disc1.iso</artifacts>
       <latestOnly>true</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
     </hudson.tasks.ArtifactArchiver>
